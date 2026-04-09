@@ -96,6 +96,8 @@ public class AzureCognitiveTranslationService implements TranslationService {
                                              String targetLanguage, TranslationConstants.ContentType contentType, String contentCategory)
             throws TranslationException {
 
+        validateRequiredArguments(sourceLanguage, targetLanguage);
+
         String traceId = UUID.randomUUID().toString();
         LOG.info("[{}] Translating single string: {} -> {}", traceId, sourceLanguage, targetLanguage);
 
@@ -125,6 +127,8 @@ public class AzureCognitiveTranslationService implements TranslationService {
     public TranslationResult[] translateArray(String[] sourceStrings, String sourceLanguage,
                                               String targetLanguage, TranslationConstants.ContentType contentType, String contentCategory)
             throws TranslationException {
+
+        validateRequiredArguments(sourceLanguage, targetLanguage);
 
         String traceId = UUID.randomUUID().toString();
         LOG.info("[{}] Translating array: {} strings, {} -> {}",
@@ -200,7 +204,9 @@ public class AzureCognitiveTranslationService implements TranslationService {
 
     @Override
     public void setDefaultCategory(String category) {
-        this.defaultCategory = category;
+        if (category != null && !category.trim().isEmpty()) {
+            this.defaultCategory = category;
+        }
     }
 
     // ============================================================
@@ -397,7 +403,7 @@ public class AzureCognitiveTranslationService implements TranslationService {
         List<String> results = new ArrayList<>();
 
         String url = String.format("%s?api-version=3.0&from=%s&to=%s&textType=%s",
-                config.endpoint(), fromLang, toLang, config.textType());
+                normalizeEndpoint(config.endpoint()), fromLang, toLang, config.textType());
 
         JsonArray requestBody = new JsonArray();
         for (String text : batch) {
@@ -484,6 +490,34 @@ public class AzureCognitiveTranslationService implements TranslationService {
         }
 
         return results;
+    }
+
+    private void validateRequiredArguments(String sourceLanguage, String targetLanguage)
+            throws TranslationException {
+        if (isBlank(targetLanguage)) {
+            throw new TranslationException(
+                    "Target language is required",
+                    TranslationException.ErrorCode.UNKNOWN_LANGUAGE);
+        }
+        if (isBlank(sourceLanguage)) {
+            throw new TranslationException(
+                    "Source language is required",
+                    TranslationException.ErrorCode.UNKNOWN_LANGUAGE);
+        }
+    }
+
+    private String normalizeEndpoint(String endpoint) {
+        if (endpoint == null) {
+            return "";
+        }
+        if (endpoint.contains("?")) {
+            return endpoint.substring(0, endpoint.indexOf('?'));
+        }
+        return endpoint;
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 
     private String toAzureLanguageCode(String aemLocale) {

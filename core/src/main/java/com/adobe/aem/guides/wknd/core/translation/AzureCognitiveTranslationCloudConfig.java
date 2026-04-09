@@ -3,6 +3,7 @@ package com.adobe.aem.guides.wknd.core.translation;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 
 import com.adobe.granite.translation.api.TranslationConfig;
 import com.adobe.granite.translation.api.TranslationException;
@@ -31,6 +32,10 @@ public class AzureCognitiveTranslationCloudConfig implements TranslationConfig {
 
     @Override
     public Map<String, String> getLanguages() throws TranslationException {
+        return getLanguages(null);
+    }
+
+    public Map<String, String> getLanguages(ResourceResolver resolver) {
         // Return null to indicate all languages are supported
         // Azure Translator supports 100+ languages
         return null;

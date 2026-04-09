@@ -1,8 +1,9 @@
 package com.adobe.aem.guides.wknd.core.translation;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import org.apache.sling.api.resource.Resource;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
@@ -46,9 +47,21 @@ public class AzureCognitiveTranslationServiceFactory implements TranslationServi
                 maskEndpoint(config.endpoint()));
     }
 
+    public TranslationService createTranslationService(TranslationMethod translationMethod,
+                                                       String cloudConfigPath,
+                                                       Resource resource) throws TranslationException {
+        return createTranslationService(translationMethod, cloudConfigPath);
+    }
+
     @Override
     public TranslationService createTranslationService(TranslationMethod translationMethod,
                                                        String cloudConfigPath) throws TranslationException {
+        validateConfiguration();
+        if (translationMethod != TranslationMethod.MACHINE_TRANSLATION) {
+            throw new TranslationException(
+                    "Unsupported translation method: " + translationMethod,
+                    TranslationException.ErrorCode.SERVICE_NOT_IMPLEMENTED);
+        }
         LOG.info("Creating TranslationService. Method: {}, CloudConfig: {}",
                 translationMethod, cloudConfigPath);
         return new AzureCognitiveTranslationService(config);
@@ -56,9 +69,7 @@ public class AzureCognitiveTranslationServiceFactory implements TranslationServi
 
     @Override
     public List<TranslationMethod> getSupportedTranslationMethods() {
-        List<TranslationMethod> methods = new ArrayList<>();
-        methods.add(TranslationMethod.MACHINE_TRANSLATION);
-        return methods;
+        return Collections.singletonList(TranslationMethod.MACHINE_TRANSLATION);
     }
 
     @Override
@@ -76,5 +87,22 @@ public class AzureCognitiveTranslationServiceFactory implements TranslationServi
             return "***";
         }
         return endpoint.substring(0, 20) + "...";
+    }
+
+    private void validateConfiguration() throws TranslationException {
+        if (config == null) {
+            throw new TranslationException(
+                    "Azure translation factory is not configured",
+                    TranslationException.ErrorCode.MISSING_CREDENTIALS);
+        }
+        if (isBlank(config.endpoint()) || isBlank(config.subscriptionKey())) {
+            throw new TranslationException(
+                    "Azure endpoint and subscription key must be configured",
+                    TranslationException.ErrorCode.MISSING_CREDENTIALS);
+        }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }

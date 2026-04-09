@@ -1,80 +1,64 @@
 package com.adobe.aem.guides.wknd.core.translation;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Modified;
-import org.osgi.service.metatype.annotations.Designate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.adobe.granite.translation.api.TranslationConstants.TranslationMethod;
-import com.adobe.granite.translation.api.TranslationException;
-import com.adobe.granite.translation.api.TranslationService;
-import com.adobe.granite.translation.api.TranslationServiceFactory;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.AttributeType;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 /**
- * Lufthansa Azure Cognitive Translation Service Factory.
- *
- * This factory is discovered by AEM's Translation Integration Framework (TIF)
- * and appears in the Cloud Config UI.
+ * OSGi configuration for the Azure Cognitive Translation connector.
  */
-@Component(
-        service = TranslationServiceFactory.class,
-        immediate = true,
-        property = {
-                TranslationServiceFactory.PROPERTY_TRANSLATION_FACTORY + "=lufthansa-azure",
-                "translation.provider.id=lufthansa-azure",
-                "translation.provider.name=Lufthansa Azure Machine Translation",
-                "translation.provider.type=MT"
-        }
+@ObjectClassDefinition(
+        name = "WKND Azure Cognitive Translation Connector",
+        description = "Configuration for the Azure Cognitive Translator integration"
 )
-@Designate(ocd = AzureCognitiveTranslationConfig.class)
-public class AzureCognitiveTranslationServiceFactory implements TranslationServiceFactory {
+public @interface AzureCognitiveTranslationConfig {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AzureCognitiveTranslationServiceFactory.class);
+    @AttributeDefinition(
+            name = "Azure Endpoint",
+            description = "Full Azure Translator translate endpoint URL"
+    )
+    String endpoint() default "";
 
-    private volatile AzureCognitiveTranslationConfig config;
+    @AttributeDefinition(
+            name = "Subscription Key",
+            type = AttributeType.PASSWORD,
+            description = "Azure Cognitive Services subscription key"
+    )
+    String subscriptionKey() default "";
 
-    @Activate
-    @Modified
-    protected void activate(AzureCognitiveTranslationConfig config) {
-        this.config = config;
-        LOG.info("Lufthansa Azure Cognitive Translation Factory activated. Endpoint: {}",
-                maskEndpoint(config.endpoint()));
-    }
+    @AttributeDefinition(
+            name = "Region",
+            description = "Optional Azure region for the subscription"
+    )
+    String region() default "";
 
-    @Override
-    public TranslationService createTranslationService(TranslationMethod translationMethod,
-                                                       String cloudConfigPath) throws TranslationException {
-        LOG.info("Creating TranslationService. Method: {}, CloudConfig: {}",
-                translationMethod, cloudConfigPath);
-        return new AzureCognitiveTranslationService(config);
-    }
+    @AttributeDefinition(
+            name = "Text Type",
+            description = "Request text type sent to Azure: html or plain"
+    )
+    String textType() default "html";
 
-    @Override
-    public List<TranslationMethod> getSupportedTranslationMethods() {
-        List<TranslationMethod> methods = new ArrayList<>();
-        methods.add(TranslationMethod.MACHINE_TRANSLATION);
-        return methods;
-    }
+    @AttributeDefinition(name = "Connection Timeout (ms)")
+    int connectTimeoutMs() default 5000;
 
-    @Override
-    public String getServiceFactoryName() {
-        return config.providerName();
-    }
+    @AttributeDefinition(name = "Socket Timeout (ms)")
+    int socketTimeoutMs() default 30000;
 
-    @Override
-    public Class<?> getServiceCloudConfigClass() {
-        return AzureCognitiveTranslationCloudConfig.class;
-    }
+    @AttributeDefinition(
+            name = "Max Items Per Batch",
+            description = "Maximum number of strings per Azure request"
+    )
+    int maxItemsPerBatch() default 100;
 
-    private String maskEndpoint(String endpoint) {
-        if (endpoint == null || endpoint.length() < 20) {
-            return "***";
-        }
-        return endpoint.substring(0, 20) + "...";
-    }
+    @AttributeDefinition(
+            name = "Max Characters Per Batch",
+            description = "Maximum characters per Azure request"
+    )
+    int maxCharsPerBatch() default 50000;
+
+    @AttributeDefinition(
+            name = "Provider Name",
+            description = "Display name shown in the AEM translation UI"
+    )
+    String providerName() default "WKND Azure Machine Translation";
 }
