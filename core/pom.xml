@@ -84,13 +84,13 @@ Import-Package: javax.annotation;version=0.0.0,*
             <groupId>com.adobe.cq</groupId>
             <artifactId>core.wcm.components.core</artifactId>
         </dependency>
-        <!-- Gson for Azure Translation connector JSON handling -->
+        <!-- Gson for Azure Translation connector JSON handling 
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.11.0</version>
             <scope>provided</scope>
-        </dependency>
+        </dependency> -->
         <!-- Apache HttpClient for Azure Translation connector -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -225,7 +225,7 @@ Import-Package: javax.annotation;version=0.0.0,*
                     <groupId>com.adobe.aem</groupId>
                     <artifactId>uber-jar</artifactId>
                     <version>${uber.jar.version}</version>
-                    <classifier>apis</classifier>
+                 <!--    <classifier>apis</classifier> -->
                     <scope>provided</scope>
                 </dependency>
                 <!-- OSGi Dependencies -->
