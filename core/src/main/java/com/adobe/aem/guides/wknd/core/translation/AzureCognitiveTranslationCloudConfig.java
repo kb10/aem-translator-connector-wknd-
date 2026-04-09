@@ -1,10 +1,8 @@
 package com.adobe.aem.guides.wknd.core.translation;
 
-import java.util.Collections;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 
 import com.adobe.granite.translation.api.TranslationConfig;
 import com.adobe.granite.translation.api.TranslationException;
@@ -20,6 +18,12 @@ public class AzureCognitiveTranslationCloudConfig implements TranslationConfig {
     private final Resource resource;
     private final String previewPath;
 
+    /**
+     * Constructor called by AEM when loading cloud config.
+     *
+     * @param resource The cloud config resource from /conf/
+     * @param previewPath Path for preview (can be null)
+     */
     public AzureCognitiveTranslationCloudConfig(Resource resource, String previewPath) {
         this.resource = resource;
         this.previewPath = previewPath;
@@ -27,32 +31,36 @@ public class AzureCognitiveTranslationCloudConfig implements TranslationConfig {
 
     @Override
     public Map<String, String> getLanguages() throws TranslationException {
-        return Collections.emptyMap();
-    }
-
-    /**
-     * Cloud Service SDK adds this method to TranslationConfig.
-     * On AEM 6.5 it does not exist in the interface, so no @Override.
-     * Keeping it here for forward compatibility.
-     */
-    public Map<String, String> getLanguages(ResourceResolver resourceResolver) {
-        return Collections.emptyMap();
+        // Return null to indicate all languages are supported
+        // Azure Translator supports 100+ languages
+        return null;
     }
 
     @Override
     public Map<String, String> getCategories() throws TranslationException {
-        return Collections.emptyMap();
+        // Return null to indicate default category
+        // Could return custom categories if needed
+        return null;
     }
 
+    /**
+     * Get the underlying resource.
+     */
     public Resource getResource() {
         return resource;
     }
 
+    /**
+     * Get the preview path.
+     */
     public String getPreviewPath() {
-        return previewPath != null ? previewPath : "";
+        return previewPath;
     }
 
+    /**
+     * Get the config resource path.
+     */
     public String getConfigResourcePath() {
-        return resource != null ? resource.getPath() : "";
+        return resource != null ? resource.getPath() : null;
     }
 }

@@ -4,12 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
@@ -43,9 +41,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 /**
- * Azure Cognitive Translation Service for WKND demo.
+ * Lufthansa Azure Cognitive Translation Service.
  *
- * Synchronous machine-translation implementation calling Azure Cognitive Translator API v3.0.
+ * Performs actual translation by calling Azure Cognitive Translator API v3.0.
+ *
+ * Your endpoint format:
+ * https://odp-weur-sens-mscgs-ebase-translator-020-n.cognitiveservices.azure.com/translator/text/v3.0/translate
+ *
+ * API Reference: https://learn.microsoft.com/en-us/azure/ai-services/translator/reference/v3-0-translate
  */
 public class AzureCognitiveTranslationService implements TranslationService {
 
@@ -56,19 +59,11 @@ public class AzureCognitiveTranslationService implements TranslationService {
     private static final String HEADER_TRACE_ID = "X-ClientTraceId";
 
     private final AzureCognitiveTranslationConfig config;
-    private final String providerId;
-    private final String providerLabel;
     private final Gson gson = new Gson();
     private String defaultCategory = "general";
 
-    /** Minimal in-memory status tracking for synchronous MT. */
-    private final Map<String, TranslationStatus> jobStates = new ConcurrentHashMap<>();
-
-    public AzureCognitiveTranslationService(AzureCognitiveTranslationConfig config,
-                                            String providerId, String providerLabel) {
+    public AzureCognitiveTranslationService(AzureCognitiveTranslationConfig config) {
         this.config = config;
-        this.providerId = providerId;
-        this.providerLabel = providerLabel;
     }
 
     // ============================================================
@@ -77,21 +72,23 @@ public class AzureCognitiveTranslationService implements TranslationService {
 
     @Override
     public Map<String, String> supportedLanguages() {
-        return Collections.emptyMap();
+        // Return null to indicate all language pairs are supported
+        return null;
     }
 
     @Override
     public boolean isDirectionSupported(String sourceLanguage, String targetLanguage)
             throws TranslationException {
+        // Azure Translator supports all directions
         return true;
     }
 
     @Override
     public String detectLanguage(String text, TranslationConstants.ContentType contentType)
             throws TranslationException {
-        throw new TranslationException(
-                "Language detection is not supported by WKND Azure Translation connector",
-                TranslationException.ErrorCode.GENERAL_EXCEPTION);
+        // Language detection not implemented
+        LOG.debug("Language detection not implemented");
+        return null;
     }
 
     @Override
@@ -103,20 +100,25 @@ public class AzureCognitiveTranslationService implements TranslationService {
         LOG.info("[{}] Translating single string: {} -> {}", traceId, sourceLanguage, targetLanguage);
 
         if (sourceString == null || sourceString.isEmpty()) {
-            return createResult("", sourceLanguage, targetLanguage, "", contentCategory, contentType);
+            return createResult("", sourceLanguage, targetLanguage, sourceString, contentCategory);
         }
 
-        String fromLang = toAzureLanguageCode(sourceLanguage);
-        String toLang = toAzureLanguageCode(targetLanguage);
-        String azureTextType = toAzureTextType(contentType);
+        try {
+            String fromLang = toAzureLanguageCode(sourceLanguage);
+            String toLang = toAzureLanguageCode(targetLanguage);
 
-        List<String> sourceList = new ArrayList<>();
-        sourceList.add(sourceString);
+            List<String> sourceList = new ArrayList<>();
+            sourceList.add(sourceString);
 
-        List<String> translated = translateBatch(sourceList, fromLang, toLang, azureTextType, traceId);
-        String result = translated.isEmpty() ? sourceString : translated.get(0);
+            List<String> translated = translateBatch(sourceList, fromLang, toLang, traceId);
 
-        return createResult(result, sourceLanguage, targetLanguage, sourceString, contentCategory, contentType);
+            String result = translated.isEmpty() ? sourceString : translated.get(0);
+            return createResult(result, sourceLanguage, targetLanguage, sourceString, contentCategory);
+
+        } catch (Exception e) {
+            LOG.error("[{}] Translation failed: {}", traceId, e.getMessage(), e);
+            throw new TranslationException(e.getMessage(), TranslationException.ErrorCode.GENERAL_EXCEPTION);
+        }
     }
 
     @Override
@@ -132,36 +134,42 @@ public class AzureCognitiveTranslationService implements TranslationService {
             return new TranslationResult[0];
         }
 
-        String fromLang = toAzureLanguageCode(sourceLanguage);
-        String toLang = toAzureLanguageCode(targetLanguage);
-        String azureTextType = toAzureTextType(contentType);
+        try {
+            String fromLang = toAzureLanguageCode(sourceLanguage);
+            String toLang = toAzureLanguageCode(targetLanguage);
 
-        List<String> sourceList = new ArrayList<>();
-        for (String s : sourceStrings) {
-            sourceList.add(s != null ? s : "");
+            List<String> sourceList = new ArrayList<>();
+            for (String s : sourceStrings) {
+                sourceList.add(s != null ? s : "");
+            }
+
+            List<String> translated = translateBatch(sourceList, fromLang, toLang, traceId);
+
+            TranslationResult[] results = new TranslationResult[sourceStrings.length];
+            for (int i = 0; i < sourceStrings.length; i++) {
+                String translatedText = (i < translated.size()) ? translated.get(i) : sourceStrings[i];
+                String sourceText = sourceStrings[i] != null ? sourceStrings[i] : "";
+                results[i] = createResult(translatedText, sourceLanguage, targetLanguage,
+                        sourceText, contentCategory);
+            }
+
+            return results;
+
+        } catch (Exception e) {
+            LOG.error("[{}] Translation failed: {}", traceId, e.getMessage(), e);
+            throw new TranslationException(e.getMessage(), TranslationException.ErrorCode.GENERAL_EXCEPTION);
         }
-
-        List<String> translated = translateBatch(sourceList, fromLang, toLang, azureTextType, traceId);
-
-        TranslationResult[] results = new TranslationResult[sourceStrings.length];
-        for (int i = 0; i < sourceStrings.length; i++) {
-            String sourceText = sourceStrings[i] != null ? sourceStrings[i] : "";
-            String translatedText = i < translated.size() ? translated.get(i) : sourceText;
-            results[i] = createResult(translatedText, sourceLanguage, targetLanguage,
-                    sourceText, contentCategory, contentType);
-        }
-
-        return results;
     }
 
     // ============================================================
-    // Storage Methods (Not implemented for MT - return empty, not null)
+    // Storage Methods (Not implemented for MT)
     // ============================================================
 
     @Override
     public TranslationResult[] getAllStoredTranslations(String sourceString, String sourceLanguage,
                                                         String targetLanguage, TranslationConstants.ContentType contentType, String contentCategory,
                                                         String userId, int maxTranslations) throws TranslationException {
+        // Not implemented for machine translation
         return new TranslationResult[0];
     }
 
@@ -169,6 +177,7 @@ public class AzureCognitiveTranslationService implements TranslationService {
     public void storeTranslation(String sourceString, String sourceLanguage, String targetLanguage,
                                  String translatedString, TranslationConstants.ContentType contentType, String contentCategory,
                                  String userId, int rating, String path) throws TranslationException {
+        // Not implemented for machine translation
         LOG.debug("storeTranslation not implemented for MT");
     }
 
@@ -176,6 +185,7 @@ public class AzureCognitiveTranslationService implements TranslationService {
     public void storeTranslation(String[] sourceStrings, String sourceLanguage, String targetLanguage,
                                  String[] translatedStrings, TranslationConstants.ContentType contentType, String contentCategory,
                                  String userId, int rating, String path) throws TranslationException {
+        // Not implemented for machine translation
         LOG.debug("storeTranslation (array) not implemented for MT");
     }
 
@@ -190,7 +200,7 @@ public class AzureCognitiveTranslationService implements TranslationService {
 
     @Override
     public void setDefaultCategory(String category) {
-        this.defaultCategory = category != null ? category : "general";
+        this.defaultCategory = category;
     }
 
     // ============================================================
@@ -207,12 +217,12 @@ public class AzureCognitiveTranslationService implements TranslationService {
 
             @Override
             public String getTranslationServiceLabel() {
-                return providerLabel;
+                return config.providerName();
             }
 
             @Override
             public String getTranslationServiceName() {
-                return providerId;
+                return "Lufthansa Azure Machine Translation";
             }
 
             @Override
@@ -222,114 +232,81 @@ public class AzureCognitiveTranslationService implements TranslationService {
 
             @Override
             public String getServiceCloudConfigRootPath() {
-                return "/apps/settings/cloudconfigs/translation/wknd-azure-translation";
+                return "/conf";
             }
         };
     }
 
     // ============================================================
-    // Job Management Methods
+    // Job Management Methods (Not implemented for synchronous MT)
     // ============================================================
 
     @Override
     public String createTranslationJob(String name, String description, String sourceLanguage,
                                        String targetLanguage, Date dueDate, TranslationState state, TranslationMetadata metadata)
             throws TranslationException {
-        String jobId = UUID.randomUUID().toString();
-        jobStates.put(jobId, TranslationStatus.DRAFT);
-        LOG.info("Created translation job: {}", jobId);
-        return jobId;
+        // For synchronous MT, return a generated job ID
+        return UUID.randomUUID().toString();
     }
 
     @Override
     public void updateTranslationJobMetadata(String jobId, TranslationMetadata metadata,
                                              TranslationMethod method) throws TranslationException {
-        LOG.debug("updateTranslationJobMetadata for job: {}", jobId);
+        // Not implemented for synchronous MT
+        LOG.debug("updateTranslationJobMetadata not implemented for synchronous MT");
     }
 
     @Override
     public String uploadTranslationObject(String jobId, TranslationObject translationObject)
             throws TranslationException {
-        String objectId = UUID.randomUUID().toString();
-        LOG.debug("uploadTranslationObject for job: {}, objectId: {}", jobId, objectId);
-        return objectId;
+        // Not implemented for synchronous MT
+        return UUID.randomUUID().toString();
     }
 
     @Override
     public TranslationScope getFinalScope(String jobId) throws TranslationException {
-        return new TranslationScope() {
-            @Override
-            public int getWordCount() {
-                return 0;
-            }
-
-            @Override
-            public int getImageCount() {
-                return 0;
-            }
-
-            @Override
-            public int getVideoCount() {
-                return 0;
-            }
-
-            @Override
-            public Map<String, String> getFinalScope() {
-                return Collections.emptyMap();
-            }
-        };
+        // Not implemented
+        return null;
     }
 
     @Override
     public TranslationStatus updateTranslationJobState(String jobId, TranslationState state)
             throws TranslationException {
-        TranslationStatus newStatus = TranslationStatus.SUBMITTED;
-
-        if (state != null && state.getStatus() != null) {
-            newStatus = state.getStatus();
-        }
-
-        jobStates.put(jobId, newStatus);
-        LOG.info("Updated job {} state to: {}", jobId, newStatus);
-        return newStatus;
+        return TranslationStatus.TRANSLATED;
     }
 
     @Override
     public TranslationStatus getTranslationJobStatus(String jobId) throws TranslationException {
-        return jobStates.getOrDefault(jobId, TranslationStatus.SUBMITTED);
+        return TranslationStatus.TRANSLATED;
     }
 
     @Override
     public CommentCollection<Comment> getTranslationJobCommentCollection(String jobId)
             throws TranslationException {
-        throw new TranslationException(
-                "Comments are not supported by WKND Azure Translation connector",
-                TranslationException.ErrorCode.GENERAL_EXCEPTION);
+        return null;
     }
 
     @Override
     public void addTranslationJobComment(String jobId, Comment comment) throws TranslationException {
-        LOG.debug("addTranslationJobComment not implemented");
+        // Not implemented
     }
 
     @Override
     public InputStream getTranslatedObject(String jobId, TranslationObject translationObject)
             throws TranslationException {
-        throw new TranslationException(
-                "Retrieving translated objects is not supported by this synchronous machine translation connector.",
-                TranslationException.ErrorCode.GENERAL_EXCEPTION);
+        return null;
     }
 
     @Override
     public TranslationStatus updateTranslationObjectState(String jobId, TranslationObject translationObject,
                                                           TranslationState state) throws TranslationException {
-        return jobStates.getOrDefault(jobId, TranslationStatus.SUBMITTED);
+        return TranslationStatus.TRANSLATED;
     }
 
     @Override
     public TranslationStatus getTranslationObjectStatus(String jobId, TranslationObject translationObject)
             throws TranslationException {
-        return jobStates.getOrDefault(jobId, TranslationStatus.SUBMITTED);
+        return TranslationStatus.TRANSLATED;
     }
 
     @Override
@@ -337,8 +314,7 @@ public class AzureCognitiveTranslationService implements TranslationService {
                                                              TranslationObject[] translationObjects, TranslationState[] states) throws TranslationException {
         TranslationStatus[] statuses = new TranslationStatus[translationObjects.length];
         for (int i = 0; i < statuses.length; i++) {
-            statuses[i] = updateTranslationObjectState(jobId, translationObjects[i],
-                    states != null && i < states.length ? states[i] : null);
+            statuses[i] = TranslationStatus.TRANSLATED;
         }
         return statuses;
     }
@@ -348,7 +324,7 @@ public class AzureCognitiveTranslationService implements TranslationService {
                                                            TranslationObject[] translationObjects) throws TranslationException {
         TranslationStatus[] statuses = new TranslationStatus[translationObjects.length];
         for (int i = 0; i < statuses.length; i++) {
-            statuses[i] = getTranslationObjectStatus(jobId, translationObjects[i]);
+            statuses[i] = TranslationStatus.TRANSLATED;
         }
         return statuses;
     }
@@ -356,20 +332,18 @@ public class AzureCognitiveTranslationService implements TranslationService {
     @Override
     public CommentCollection<Comment> getTranslationObjectCommentCollection(String jobId,
                                                                             TranslationObject translationObject) throws TranslationException {
-        throw new TranslationException(
-                "Comments are not supported by WKND Azure Translation connector",
-                TranslationException.ErrorCode.GENERAL_EXCEPTION);
+        return null;
     }
 
     @Override
     public void addTranslationObjectComment(String jobId, TranslationObject translationObject,
                                             Comment comment) throws TranslationException {
-        LOG.debug("addTranslationObjectComment not implemented");
+        // Not implemented
     }
 
     @Override
     public void updateDueDate(String jobId, Date dueDate) throws TranslationException {
-        LOG.debug("updateDueDate not implemented for synchronous MT");
+        // Not implemented
     }
 
     // ============================================================
@@ -377,7 +351,7 @@ public class AzureCognitiveTranslationService implements TranslationService {
     // ============================================================
 
     private List<String> translateBatch(List<String> sourceStrings, String fromLang,
-                                        String toLang, String azureTextType, String traceId) throws TranslationException {
+                                        String toLang, String traceId) throws TranslationException {
 
         List<String> allResults = new ArrayList<>();
 
@@ -389,20 +363,14 @@ public class AzureCognitiveTranslationService implements TranslationService {
             int charCount = 0;
 
             for (int i = batchStart; i < sourceStrings.size() && batch.size() < config.maxItemsPerBatch(); i++) {
-                String text = sourceStrings.get(i) != null ? sourceStrings.get(i) : "";
-                int textLen = text.length();
+                String text = sourceStrings.get(i);
+                int textLen = text != null ? text.length() : 0;
 
-                if (textLen > config.maxCharsPerBatch()) {
-                    throw new TranslationException(
-                            "Single text item exceeds configured maxCharsPerBatch: " + textLen,
-                            TranslationException.ErrorCode.GENERAL_EXCEPTION);
-                }
-
-                if ((charCount + textLen) > config.maxCharsPerBatch() && !batch.isEmpty()) {
+                if (charCount + textLen > config.maxCharsPerBatch() && !batch.isEmpty()) {
                     break;
                 }
 
-                batch.add(text);
+                batch.add(text != null ? text : "");
                 charCount += textLen;
             }
 
@@ -410,10 +378,10 @@ public class AzureCognitiveTranslationService implements TranslationService {
                 break;
             }
 
-            LOG.debug("[{}] Processing batch {} with {} items and {} chars",
+            LOG.debug("[{}] Processing batch {}: {} items, {} chars",
                     traceId, batchNum, batch.size(), charCount);
 
-            List<String> batchResults = translateSingleBatch(batch, fromLang, toLang, azureTextType, traceId);
+            List<String> batchResults = translateSingleBatch(batch, fromLang, toLang, traceId);
             allResults.addAll(batchResults);
 
             batchStart += batch.size();
@@ -424,12 +392,12 @@ public class AzureCognitiveTranslationService implements TranslationService {
     }
 
     private List<String> translateSingleBatch(List<String> batch, String fromLang,
-                                              String toLang, String azureTextType, String traceId) throws TranslationException {
+                                              String toLang, String traceId) throws TranslationException {
 
         List<String> results = new ArrayList<>();
 
         String url = String.format("%s?api-version=3.0&from=%s&to=%s&textType=%s",
-                config.endpoint(), fromLang, toLang, azureTextType);
+                config.endpoint(), fromLang, toLang, config.textType());
 
         JsonArray requestBody = new JsonArray();
         for (String text : batch) {
@@ -453,13 +421,13 @@ public class AzureCognitiveTranslationService implements TranslationService {
             httpPost.setHeader(HEADER_SUBSCRIPTION_KEY, config.subscriptionKey());
             httpPost.setHeader(HEADER_TRACE_ID, traceId);
 
-            if (config.region() != null && !config.region().trim().isEmpty()) {
-                httpPost.setHeader(HEADER_SUBSCRIPTION_REGION, config.region().trim());
+            if (config.region() != null && !config.region().isEmpty()) {
+                httpPost.setHeader(HEADER_SUBSCRIPTION_REGION, config.region());
             }
 
             httpPost.setEntity(new StringEntity(gson.toJson(requestBody), StandardCharsets.UTF_8));
 
-            LOG.debug("[{}] Calling Azure Translator: {}", traceId, maskUrl(url));
+            LOG.debug("[{}] Calling Azure Translator", traceId);
 
             try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
                 int statusCode = response.getStatusLine().getStatusCode();
@@ -467,27 +435,29 @@ public class AzureCognitiveTranslationService implements TranslationService {
                 String responseBody = entity != null ? EntityUtils.toString(entity, StandardCharsets.UTF_8) : "";
 
                 if (statusCode == HttpStatus.SC_OK) {
-                    results = parseTranslationResponse(responseBody);
-                    LOG.info("[{}] Azure returned {} translations", traceId, results.size());
+                    results = parseTranslationResponse(responseBody, batch.size());
+                    LOG.debug("[{}] Azure returned {} translations", traceId, results.size());
                 } else {
-                    LOG.error("[{}] Azure returned HTTP {} body={}", traceId, statusCode, responseBody);
+                    LOG.error("[{}] Azure returned HTTP {}: {}", traceId, statusCode, responseBody);
                     throw new TranslationException(
-                            "Azure Translator returned HTTP " + statusCode + ": " + responseBody,
+                            "Azure Translator returned HTTP " + statusCode,
                             TranslationException.ErrorCode.GENERAL_EXCEPTION);
                 }
             }
 
         } catch (IOException e) {
-            LOG.error("[{}] HTTP error calling Azure Translator: {}", traceId, e.getMessage(), e);
+            LOG.error("[{}] HTTP error calling Azure: {}", traceId, e.getMessage());
             throw new TranslationException(
-                    "HTTP error calling Azure Translator: " + e.getMessage(),
+                    "HTTP error: " + e.getMessage(),
                     TranslationException.ErrorCode.GENERAL_EXCEPTION);
         }
 
         return results;
     }
 
-    private List<String> parseTranslationResponse(String responseBody) throws TranslationException {
+    private List<String> parseTranslationResponse(String responseBody, int expectedCount)
+            throws TranslationException {
+
         List<String> results = new ArrayList<>();
 
         try {
@@ -509,7 +479,7 @@ public class AzureCognitiveTranslationService implements TranslationService {
         } catch (Exception e) {
             LOG.error("Failed to parse Azure response: {}", e.getMessage());
             throw new TranslationException(
-                    "Failed to parse Azure Translator response: " + e.getMessage(),
+                    "Failed to parse response: " + e.getMessage(),
                     TranslationException.ErrorCode.GENERAL_EXCEPTION);
         }
 
@@ -517,19 +487,18 @@ public class AzureCognitiveTranslationService implements TranslationService {
     }
 
     private String toAzureLanguageCode(String aemLocale) {
-        if (aemLocale == null || aemLocale.trim().isEmpty()) {
+        if (aemLocale == null || aemLocale.isEmpty()) {
             return "en";
         }
 
-        String normalized = aemLocale.replace('_', '-').trim();
+        String normalized = aemLocale.replace('_', '-').toLowerCase();
         String[] parts = normalized.split("-");
-
-        String lang = parts[0].toLowerCase();
+        String lang = parts[0];
         String region = parts.length > 1 ? parts[1].toUpperCase() : "";
 
         switch (lang) {
             case "zh":
-                if ("TW".equals(region) || "HK".equals(region) || "MO".equals(region)) {
+                if ("TW".equals(region) || "HK".equals(region)) {
                     return "zh-Hant";
                 }
                 return "zh-Hans";
@@ -545,38 +514,29 @@ public class AzureCognitiveTranslationService implements TranslationService {
         }
     }
 
-    private String toAzureTextType(TranslationConstants.ContentType contentType) {
-        if (contentType != null && "TEXT".equals(contentType.name())) {
-            return "plain";
-        }
-        return "html";
-    }
-
     private TranslationResult createResult(final String translation, final String sourceLanguage,
-                                           final String targetLanguage, final String sourceString,
-                                           final String category,
-                                           final TranslationConstants.ContentType contentType) {
+                                           final String targetLanguage, final String sourceString, final String category) {
 
         return new TranslationResult() {
 
             @Override
             public String getTranslation() {
-                return translation != null ? translation : "";
+                return translation;
             }
 
             @Override
             public String getSourceLanguage() {
-                return sourceLanguage != null ? sourceLanguage : "";
+                return sourceLanguage;
             }
 
             @Override
             public String getTargetLanguage() {
-                return targetLanguage != null ? targetLanguage : "";
+                return targetLanguage;
             }
 
             @Override
             public TranslationConstants.ContentType getContentType() {
-                return contentType != null ? contentType : TranslationConstants.ContentType.HTML;
+                return TranslationConstants.ContentType.HTML;
             }
 
             @Override
@@ -586,7 +546,7 @@ public class AzureCognitiveTranslationService implements TranslationService {
 
             @Override
             public String getSourceString() {
-                return sourceString != null ? sourceString : "";
+                return sourceString;
             }
 
             @Override
@@ -596,15 +556,8 @@ public class AzureCognitiveTranslationService implements TranslationService {
 
             @Override
             public String getUserId() {
-                return "";
+                return null;
             }
         };
-    }
-
-    private String maskUrl(String url) {
-        if (url == null || url.length() < 50) {
-            return "***";
-        }
-        return url.substring(0, 50) + "...";
     }
 }
