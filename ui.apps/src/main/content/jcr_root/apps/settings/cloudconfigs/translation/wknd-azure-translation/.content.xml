@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jcr:root xmlns:sling="http://sling.apache.org/jcr/sling/1.0"
+          xmlns:cq="http://www.day.com/jcr/cq/1.0"
+          xmlns:jcr="http://www.jcp.org/jcr/1.0"
+    jcr:primaryType="cq:Page">
+    <jcr:content
+        jcr:primaryType="cq:PageContent"
+        jcr:title="WKND Azure Machine Translation"
+        jcr:description="Azure Cognitive Services Translator connector for WKND"
+        sling:resourceType="cq/translation/components/translationconnector"
+        translationFactory="wknd-azure"
+        configsPath="[/apps/settings/cloudconfigs/translation/wknd-azure-translation,/conf/global/settings/cloudconfigs/translation/wknd-azure-translation]"/>
+    <default_config
+        jcr:primaryType="cq:Page">
+        <jcr:content
+            jcr:primaryType="cq:PageContent"
+            jcr:title="WKND Azure Default Configuration"
+            sling:resourceType="cq/translation/components/mt-cloudconfig"
+            cq:template="/libs/cq/translation/templates/mt-servicepage"
+            cq:cloudservicename="wknd-azure-translation"
+            translationFactory="wknd-azure"/>
+    </default_config>
+</jcr:root>

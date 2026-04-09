@@ -1,0 +1,11 @@
+{
+    endpoint="https://xxxxxxxxx.cognitiveservices.azure.com/translator/text/v3.0/translate",
+    subscriptionKey="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "region": "westeurope",
+    "textType": "html",
+    "connectTimeoutMs": 5000,
+    "socketTimeoutMs": 30000,
+    "maxItemsPerBatch": 100,
+    "maxCharsPerBatch": 50000,
+    "providerName": "WKND Azure Machine Translation"
+}
