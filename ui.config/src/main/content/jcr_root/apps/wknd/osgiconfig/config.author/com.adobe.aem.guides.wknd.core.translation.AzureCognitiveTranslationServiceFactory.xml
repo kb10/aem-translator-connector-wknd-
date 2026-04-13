@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jcr:root xmlns:sling="http://sling.apache.org/jcr/sling/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0"
+    jcr:primaryType="sling:OsgiConfig"
+    connectTimeoutMs="{Long}5000"
+    endpoint="https://odp-weur-sens-mscgs-ebase-translator-020-n.cognitiveservices.azure.com/translator/text/v3.0/translate"
+    maxCharsPerBatch="50000"
+    maxItemsPerBatch="100"
+    providerName="lufthansa-azure"
+    region=""
+    socketTimeoutMs="{Long}30001"
+    subscriptionKey="9ea41e2ab7a74a629d693b7f4c8a020b"
+    textType="html"/>

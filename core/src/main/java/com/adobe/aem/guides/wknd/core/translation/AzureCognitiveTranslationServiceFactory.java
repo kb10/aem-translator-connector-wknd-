@@ -16,15 +16,15 @@ import com.adobe.granite.translation.api.TranslationService;
 import com.adobe.granite.translation.api.TranslationServiceFactory;
 
 /**
- * Azure Cognitive Translation Service Factory for WKND demo.
+ * Lufthansa Azure Cognitive Translation Service Factory.
  */
 @Component(
         service = TranslationServiceFactory.class,
         immediate = true,
         property = {
-                TranslationServiceFactory.PROPERTY_TRANSLATION_FACTORY + "=" + AzureCognitiveTranslationServiceFactory.PROVIDER_ID,
-                "translation.provider.id=" + AzureCognitiveTranslationServiceFactory.PROVIDER_ID,
-                "translation.provider.name=" + AzureCognitiveTranslationServiceFactory.PROVIDER_LABEL,
+                "translationFactory=lufthansa-azure",
+                "translation.provider.id=lufthansa-azure",
+                "translation.provider.name=lufthansa-azure",
                 "translation.provider.type=MT"
         }
 )
@@ -33,45 +33,42 @@ public class AzureCognitiveTranslationServiceFactory implements TranslationServi
 
     private static final Logger LOG = LoggerFactory.getLogger(AzureCognitiveTranslationServiceFactory.class);
 
-    /** Stable internal identifier used by AEM/framework matching. */
-    public static final String PROVIDER_ID = "wknd-azure";
-
-    /** Human-readable label used in the AEM UI. */
-    public static final String PROVIDER_LABEL = "WKND Azure Machine Translation";
+    public static final String PROVIDER_ID = "lufthansa-azure";
+    public static final String PROVIDER_LABEL = "lufthansa-azure";
 
     private volatile AzureCognitiveTranslationConfig config;
-    private volatile boolean configValid;
+    private volatile boolean configValid = false;
 
     @Activate
     @Modified
     protected void activate(AzureCognitiveTranslationConfig config) {
+
+        LOG.info("========================================");
+        LOG.info("LUFTHANSA AZURE FACTORY ACTIVATING NOW!");
+        LOG.info("========================================");
+
         this.config = config;
         this.configValid = validateConfig(config);
 
-        LOG.info("========================================");
-        LOG.info("WKND AZURE TRANSLATION FACTORY ACTIVATING");
-        LOG.info("========================================");
-        LOG.info("Provider ID   : {}", PROVIDER_ID);
-        LOG.info("Provider Label: {}", PROVIDER_LABEL);
-
         if (configValid) {
-            LOG.info("Factory activated successfully. Endpoint: {}", maskEndpoint(config.endpoint()));
+            LOG.info("Lufthansa Azure Translation Factory activated. Provider ID: {}, Endpoint: {}",
+                    PROVIDER_ID, maskEndpoint(config.endpoint()));
         } else {
-            LOG.error("Factory activated with INVALID configuration.");
+            LOG.error("Lufthansa Azure Translation Factory activated with INVALID config.");
         }
     }
 
-    private boolean validateConfig(AzureCognitiveTranslationConfig cfg) {
-        if (cfg == null) {
-            LOG.error("Azure translation configuration is null");
+    private boolean validateConfig(AzureCognitiveTranslationConfig config) {
+        if (config == null) {
+            LOG.error("Configuration is null");
             return false;
         }
-        if (isBlank(cfg.endpoint())) {
-            LOG.error("Azure endpoint is missing");
+        if (config.endpoint() == null || config.endpoint().trim().isEmpty()) {
+            LOG.error("Azure endpoint is missing or empty");
             return false;
         }
-        if (isBlank(cfg.subscriptionKey())) {
-            LOG.error("Azure subscription key is missing");
+        if (config.subscriptionKey() == null || config.subscriptionKey().trim().isEmpty()) {
+            LOG.error("Azure subscription key is missing or empty");
             return false;
         }
         return true;
@@ -80,25 +77,16 @@ public class AzureCognitiveTranslationServiceFactory implements TranslationServi
     @Override
     public TranslationService createTranslationService(TranslationMethod translationMethod,
                                                        String cloudConfigPath) throws TranslationException {
-        LOG.info("Creating TranslationService. method={}, cloudConfigPath={}, providerId={}",
+        LOG.info("Creating TranslationService. Method: {}, CloudConfig: {}, Provider: {}",
                 translationMethod, cloudConfigPath, PROVIDER_ID);
 
         if (!configValid) {
             throw new TranslationException(
-                    "WKND Azure Translation connector is not properly configured. Check OSGi endpoint/subscription key.",
+                    "Lufthansa Azure Translation connector is not properly configured.",
                     TranslationException.ErrorCode.GENERAL_EXCEPTION);
         }
 
-        if (translationMethod != TranslationMethod.MACHINE_TRANSLATION) {
-            LOG.warn("Requested translationMethod={} but only MACHINE_TRANSLATION is supported. Returning MT service.", translationMethod);
-        }
-
-        String effectiveLabel = PROVIDER_LABEL;
-        if (config != null && !isBlank(config.providerName())) {
-            effectiveLabel = config.providerName().trim();
-        }
-
-        return new AzureCognitiveTranslationService(config, PROVIDER_ID, effectiveLabel);
+        return new AzureCognitiveTranslationService(config, PROVIDER_ID, PROVIDER_LABEL);
     }
 
     @Override
@@ -110,7 +98,7 @@ public class AzureCognitiveTranslationServiceFactory implements TranslationServi
 
     @Override
     public String getServiceFactoryName() {
-        return PROVIDER_ID;
+        return PROVIDER_LABEL;
     }
 
     @Override
@@ -118,14 +106,10 @@ public class AzureCognitiveTranslationServiceFactory implements TranslationServi
         return AzureCognitiveTranslationCloudConfig.class;
     }
 
-    private boolean isBlank(String value) {
-        return value == null || value.trim().isEmpty();
-    }
-
     private String maskEndpoint(String endpoint) {
-        if (endpoint == null || endpoint.length() < 24) {
+        if (endpoint == null || endpoint.length() < 20) {
             return "***";
         }
-        return endpoint.substring(0, 24) + "...";
+        return endpoint.substring(0, 20) + "...";
     }
 }
