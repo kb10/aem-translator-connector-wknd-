@@ -26,5 +26,10 @@
         sites_translateEmbeddedAssets="sitetranslation"
         sites_translateTags="true"
         sites_translationWorkflow="machineTranslation"
+        cq:lastReplicated="{Date}2026-04-15T16:24:15.597+02:00"
+        cq:lastReplicatedBy="admin"
+        cq:lastReplicationAction="Activate"
+        cq:lastReplicationAction_preview="Activate"
+        cq:lastPublished_preview="{Date}2026-04-15T16:24:15.597+02:00"
         ugcPath="de_at"/>
 </jcr:root>

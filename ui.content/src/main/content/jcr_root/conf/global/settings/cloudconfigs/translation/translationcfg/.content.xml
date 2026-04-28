@@ -24,6 +24,11 @@
         serviceUrl="http://www.adobe.com/go/tif"
         showOnDashboard="{Boolean}true"
         summaryPanelPath="/libs/cq/translation/components/mt-cloudconfig/panel"
-        thumbnailPath="/libs/cq/translation/templates/mt-servicepage/thumbnail.png"/>
+        cq:lastReplicated="{Date}2026-04-14T16:24:15.597+02:00"
+        cq:lastReplicatedBy="admin"
+        thumbnailPath="/libs/cq/translation/templates/mt-servicepage/thumbnail.png"
+        cq:lastReplicationAction="Activate"
+        cq:lastReplicationAction_preview="Activate"
+        cq:lastPublished_preview="{Date}2026-04-14T16:24:15.597+02:00"/>
     <lufthansa-azure/>
 </jcr:root>
