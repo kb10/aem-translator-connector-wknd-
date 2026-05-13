@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jcr:root xmlns:sling="http://sling.apache.org/jcr/sling/1.0"
+          xmlns:cq="http://www.day.com/jcr/cq/1.0"
+          xmlns:jcr="http://www.jcp.org/jcr/1.0"
+    jcr:primaryType="cq:Page">
+    <jcr:content
+        jcr:primaryType="cq:PageContent"
+        jcr:title="my-custom-translator"
+        jcr:description="Azure Cognitive Services Translator connector"
+        sling:resourceType="cq/translation/components/translationconnector"
+        cq:lastReplicated="{Date}2026-04-15T16:24:15.597+02:00"
+        cq:lastReplicatedBy="admin"
+        cq:lastReplicationAction="Activate"
+        cq:lastReplicationAction_preview="Activate"
+        cq:lastPublished_preview="{Date}2026-04-15T16:24:15.597+02:00"
+        translationFactory="my-custom-translator"/>
+    <default_config
+        jcr:primaryType="cq:Page">
+        <jcr:content
+            jcr:primaryType="cq:PageContent"
+            jcr:title="my-custom-translator"
+            sling:resourceType="cq/translation/components/mt-cloudconfig"
+            cq:template="/libs/cq/translation/templates/mt-servicepage"
+            cq:cloudservicename="my-custom-translator"
+            cq:lastReplicated="{Date}2026-04-15T16:24:15.597+02:00"
+            cq:lastReplicatedBy="admin"
+            cq:lastReplicationAction="Activate"
+            cq:lastReplicationAction_preview="Activate"
+            cq:lastPublished_preview="{Date}2026-04-15T16:24:15.597+02:00"
+            translationFactory="my-custom-translator"/>
+    </default_config>
+</jcr:root>

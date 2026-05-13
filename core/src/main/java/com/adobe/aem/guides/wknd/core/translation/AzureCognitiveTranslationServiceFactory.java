@@ -35,7 +35,7 @@ public class AzureCognitiveTranslationServiceFactory implements TranslationServi
 
     public static final String PROVIDER_ID = "my-custom-translator";
     public static final String DEFAULT_PROVIDER_LABEL = "My Custom Translator";
-    public static final String CLOUD_CONFIG_ROOT_PATH = "/apps/settings/cloudconfigs/translation/my-custom-translator";
+    public static final String CLOUD_CONFIG_ROOT_PATH = "/conf/global/settings/cloudconfigs/translation/my-custom-translator";
     public static final String DEFAULT_CLOUD_CONFIG_PATH = CLOUD_CONFIG_ROOT_PATH + "/default_config";
 
     private volatile AzureCognitiveTranslationConfig config;
