@@ -24,7 +24,7 @@ import com.adobe.granite.translation.api.TranslationServiceFactory;
         property = {
                 "translationFactory=my-custom-translator",
                 "translation.provider.id=my-custom-translator",
-                "translation.provider.name=My Custom Translator",
+                "translation.provider.name=my-custom-translator",
                 "translation.provider.type=MT"
         }
 )
@@ -34,7 +34,7 @@ public class AzureCognitiveTranslationServiceFactory implements TranslationServi
     private static final Logger LOG = LoggerFactory.getLogger(AzureCognitiveTranslationServiceFactory.class);
 
     public static final String PROVIDER_ID = "my-custom-translator";
-    public static final String DEFAULT_PROVIDER_LABEL = "My Custom Translator";
+    public static final String DEFAULT_PROVIDER_LABEL = "my-custom-translator";
     public static final String CLOUD_CONFIG_ROOT_PATH = "/conf/global/settings/cloudconfigs/translation/my-custom-translator";
     public static final String DEFAULT_CLOUD_CONFIG_PATH = CLOUD_CONFIG_ROOT_PATH + "/default_config";
 
@@ -46,17 +46,17 @@ public class AzureCognitiveTranslationServiceFactory implements TranslationServi
     protected void activate(AzureCognitiveTranslationConfig config) {
 
         LOG.info("========================================");
-        LOG.info("MY CUSTOM TRANSLATOR FACTORY ACTIVATING NOW!");
+        LOG.info("my-custom-translator FACTORY ACTIVATING NOW!");
         LOG.info("========================================");
 
         this.config = config;
         this.configValid = validateConfig(config);
 
         if (configValid) {
-            LOG.info("My Custom Translator Factory activated. Provider ID: {}, Endpoint: {}",
+            LOG.info("my-custom-translator Factory activated. Provider ID: {}, Endpoint: {}",
                     PROVIDER_ID, maskEndpoint(config.endpoint()));
         } else {
-            LOG.error("My Custom Translator Factory activated with INVALID config.");
+            LOG.error("my-custom-translator Factory activated with INVALID config.");
         }
     }
 
@@ -84,7 +84,7 @@ public class AzureCognitiveTranslationServiceFactory implements TranslationServi
 
         if (!configValid) {
             throw new TranslationException(
-                    "My Custom Translator connector is not properly configured.",
+                    "my-custom-translator connector is not properly configured.",
                     TranslationException.ErrorCode.GENERAL_EXCEPTION);
         }
 

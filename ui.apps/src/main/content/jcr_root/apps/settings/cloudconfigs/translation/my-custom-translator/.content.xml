@@ -5,7 +5,7 @@
     jcr:primaryType="cq:Page">
     <jcr:content
         jcr:primaryType="cq:PageContent"
-        jcr:title="My Custom Translator"
+        jcr:title="my-custom-translator"
         jcr:description="Azure Cognitive Services Translator connector"
         sling:resourceType="cq/translation/components/translationconnector"
         translationFactory="my-custom-translator"
@@ -14,7 +14,7 @@
         jcr:primaryType="cq:Page">
         <jcr:content
             jcr:primaryType="cq:PageContent"
-            jcr:title="My Custom Translator Default Configuration"
+            jcr:title="my-custom-translator"
             sling:resourceType="cq/translation/components/mt-cloudconfig"
             cq:template="/libs/cq/translation/templates/mt-servicepage"
             cq:cloudservicename="my-custom-translator"
