@@ -5,7 +5,7 @@
     endpoint="https://xxxxxxxxx.cognitiveservices.azure.com/translator/text/v3.0/translate"
     maxCharsPerBatch="50000"
     maxItemsPerBatch="100"
-    providerName="My Custom Translator"
+    providerName="my-custom-translator"
     region=""
     socketTimeoutMs="{Long}30001"
     subscriptionKey="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"

@@ -63,5 +63,5 @@ public @interface AzureCognitiveTranslationConfig {
             name = "Provider Name",
             description = "Display name in AEM Translation UI"
     )
-    String providerName() default "My Custom Translator";
+    String providerName() default "my-custom-translator";
 }

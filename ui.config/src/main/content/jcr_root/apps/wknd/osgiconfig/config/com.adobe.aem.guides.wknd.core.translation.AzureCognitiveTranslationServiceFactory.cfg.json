@@ -7,5 +7,5 @@
     "socketTimeoutMs": 30000,
     "maxItemsPerBatch": 100,
     "maxCharsPerBatch": 50000,
-    "providerName": "My Custom Translator"
+    "providerName": "my-custom-translator"
 }
