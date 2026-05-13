@@ -16,7 +16,7 @@ public @interface AzureCognitiveTranslationConfig {
             name = "Azure Endpoint",
             description = "Full URL to Azure Translator API (e.g., https://odp-weur-sens-mscgs-ebase-translator-020-n.cognitiveservices.azure.com/translator/text/v3.0/translate)"
     )
-    String endpoint() default "https://odp-weur-sens-mscgs-ebase-translator-020-n.cognitiveservices.azure.com/translator/text/v3.0/translate";
+    String endpoint() default "https://xxxxxx.azure.com/translator/text/v3.0/translate";
 
     @AttributeDefinition(
             name = "Subscription Key",
