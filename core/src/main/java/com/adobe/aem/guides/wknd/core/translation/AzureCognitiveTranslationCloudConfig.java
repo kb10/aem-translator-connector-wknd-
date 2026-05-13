@@ -3,12 +3,13 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 
 import com.adobe.granite.translation.api.TranslationConfig;
 import com.adobe.granite.translation.api.TranslationException;
 
 /**
- * Cloud Configuration class for Lufthansa Azure Cognitive Translation.
+ * Cloud Configuration class for Custom Azure Cognitive Translation.
  *
  * This class is required by AEM's Translation Integration Framework to
  * read configuration from Cloud Config nodes in /conf/.
@@ -33,6 +34,10 @@ public class AzureCognitiveTranslationCloudConfig implements TranslationConfig {
     public Map<String, String> getLanguages() throws TranslationException {
         // Return empty map instead of null - AEM 6.5 expects non-null
         // Empty map indicates all languages are supported
+        return Collections.emptyMap();
+    }
+
+    public Map<String, String> getLanguages(ResourceResolver resourceResolver) {
         return Collections.emptyMap();
     }
 

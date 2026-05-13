@@ -4,5 +4,5 @@
     <filter root="/apps/wknd/components"/>
     <filter root="/apps/wknd/i18n"/>
     <filter root="/apps/msm/wknd_blueprint" mode="merge"/>
-    <filter root="/apps/settings/cloudconfigs/translation/wknd-azure-translation" mode="merge"/>
+    <filter root="/apps/settings/cloudconfigs/translation/my-custom-translator" mode="merge"/>
 </workspaceFilter>

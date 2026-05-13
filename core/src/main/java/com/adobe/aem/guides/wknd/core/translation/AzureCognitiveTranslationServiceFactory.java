@@ -16,15 +16,15 @@ import com.adobe.granite.translation.api.TranslationService;
 import com.adobe.granite.translation.api.TranslationServiceFactory;
 
 /**
- * Lufthansa Azure Cognitive Translation Service Factory.
+ * Custom Azure Cognitive Translation Service Factory.
  */
 @Component(
         service = TranslationServiceFactory.class,
         immediate = true,
         property = {
-                "translationFactory=lufthansa-azure",
-                "translation.provider.id=lufthansa-azure",
-                "translation.provider.name=lufthansa-azure",
+                "translationFactory=my-custom-translator",
+                "translation.provider.id=my-custom-translator",
+                "translation.provider.name=My Custom Translator",
                 "translation.provider.type=MT"
         }
 )
@@ -33,8 +33,10 @@ public class AzureCognitiveTranslationServiceFactory implements TranslationServi
 
     private static final Logger LOG = LoggerFactory.getLogger(AzureCognitiveTranslationServiceFactory.class);
 
-    public static final String PROVIDER_ID = "lufthansa-azure";
-    public static final String PROVIDER_LABEL = "lufthansa-azure";
+    public static final String PROVIDER_ID = "my-custom-translator";
+    public static final String DEFAULT_PROVIDER_LABEL = "My Custom Translator";
+    public static final String CLOUD_CONFIG_ROOT_PATH = "/apps/settings/cloudconfigs/translation/my-custom-translator";
+    public static final String DEFAULT_CLOUD_CONFIG_PATH = CLOUD_CONFIG_ROOT_PATH + "/default_config";
 
     private volatile AzureCognitiveTranslationConfig config;
     private volatile boolean configValid = false;
@@ -44,17 +46,17 @@ public class AzureCognitiveTranslationServiceFactory implements TranslationServi
     protected void activate(AzureCognitiveTranslationConfig config) {
 
         LOG.info("========================================");
-        LOG.info("LUFTHANSA AZURE FACTORY ACTIVATING NOW!");
+        LOG.info("MY CUSTOM TRANSLATOR FACTORY ACTIVATING NOW!");
         LOG.info("========================================");
 
         this.config = config;
         this.configValid = validateConfig(config);
 
         if (configValid) {
-            LOG.info("Lufthansa Azure Translation Factory activated. Provider ID: {}, Endpoint: {}",
+            LOG.info("My Custom Translator Factory activated. Provider ID: {}, Endpoint: {}",
                     PROVIDER_ID, maskEndpoint(config.endpoint()));
         } else {
-            LOG.error("Lufthansa Azure Translation Factory activated with INVALID config.");
+            LOG.error("My Custom Translator Factory activated with INVALID config.");
         }
     }
 
@@ -82,11 +84,11 @@ public class AzureCognitiveTranslationServiceFactory implements TranslationServi
 
         if (!configValid) {
             throw new TranslationException(
-                    "Lufthansa Azure Translation connector is not properly configured.",
+                    "My Custom Translator connector is not properly configured.",
                     TranslationException.ErrorCode.GENERAL_EXCEPTION);
         }
 
-        return new AzureCognitiveTranslationService(config, PROVIDER_ID, PROVIDER_LABEL);
+        return new AzureCognitiveTranslationService(config, PROVIDER_ID, getProviderLabel());
     }
 
     @Override
@@ -98,12 +100,19 @@ public class AzureCognitiveTranslationServiceFactory implements TranslationServi
 
     @Override
     public String getServiceFactoryName() {
-        return PROVIDER_LABEL;
+        return PROVIDER_ID;
     }
 
     @Override
     public Class<?> getServiceCloudConfigClass() {
         return AzureCognitiveTranslationCloudConfig.class;
+    }
+
+    private String getProviderLabel() {
+        if (config == null || config.providerName() == null || config.providerName().trim().isEmpty()) {
+            return DEFAULT_PROVIDER_LABEL;
+        }
+        return config.providerName().trim();
     }
 
     private String maskEndpoint(String endpoint) {

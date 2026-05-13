@@ -4,19 +4,19 @@ import org.osgi.service.metatype.annotations.AttributeType;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 /**
- * OSGi configuration for Lufthansa Azure Cognitive Translation Connector.
+ * OSGi configuration for Custom Azure Cognitive Translation Connector.
  */
 @ObjectClassDefinition(
-        name = "Lufthansa Azure Cognitive Translation Connector",
-        description = "Azure Cognitive Translator connector for Lufthansa eBase (AEM 6.5)"
+        name = "Custom Azure Cognitive Translation Connector",
+        description = "Azure Cognitive Translator connector for AEM 6.5"
 )
 public @interface AzureCognitiveTranslationConfig {
 
     @AttributeDefinition(
             name = "Azure Endpoint",
-            description = "Full URL to Azure Translator API (e.g., https://odp-weur-sens-mscgs-ebase-translator-020-n.cognitiveservices.azure.com/translator/text/v3.0/translate)"
+            description = "Full URL to Azure Translator API (e.g., https://example.cognitiveservices.azure.com/translator/text/v3.0/translate)"
     )
-    String endpoint() default "https://odp-weur-sens-mscgs-ebase-translator-020-n.cognitiveservices.azure.com/translator/text/v3.0/translate";
+    String endpoint() default "https://example.cognitiveservices.azure.com/translator/text/v3.0/translate";
 
     @AttributeDefinition(
             name = "Subscription Key",
@@ -63,5 +63,5 @@ public @interface AzureCognitiveTranslationConfig {
             name = "Provider Name",
             description = "Display name in AEM Translation UI"
     )
-    String providerName() default "lufthansa-azure";
+    String providerName() default "My Custom Translator";
 }

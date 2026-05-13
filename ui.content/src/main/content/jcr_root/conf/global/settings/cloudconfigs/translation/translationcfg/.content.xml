@@ -30,5 +30,5 @@
         cq:lastReplicationAction="Activate"
         cq:lastReplicationAction_preview="Activate"
         cq:lastPublished_preview="{Date}2026-04-14T16:24:15.597+02:00"/>
-    <lufthansa-azure/>
+    <my-custom-translator/>
 </jcr:root>

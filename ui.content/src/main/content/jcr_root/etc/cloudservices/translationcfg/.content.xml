@@ -25,5 +25,5 @@
         showOnDashboard="{Boolean}true"
         summaryPanelPath="/libs/cq/translation/components/mt-cloudconfig/panel"
         thumbnailPath="/libs/cq/translation/templates/mt-servicepage/thumbnail.png"/>
-    <lufthansa-azure/>
+    <my-custom-translator/>
 </jcr:root>

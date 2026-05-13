@@ -5,19 +5,19 @@
     jcr:primaryType="cq:Page">
     <jcr:content
         jcr:primaryType="cq:PageContent"
-        jcr:title="WKND Azure Machine Translation"
-        jcr:description="Azure Cognitive Services Translator connector for WKND"
+        jcr:title="My Custom Translator"
+        jcr:description="Azure Cognitive Services Translator connector"
         sling:resourceType="cq/translation/components/translationconnector"
-        translationFactory="wknd-azure"
-        configsPath="[/apps/settings/cloudconfigs/translation/wknd-azure-translation,/conf/global/settings/cloudconfigs/translation/wknd-azure-translation]"/>
+        translationFactory="my-custom-translator"
+        configsPath="[/apps/settings/cloudconfigs/translation/my-custom-translator,/conf/global/settings/cloudconfigs/translation/my-custom-translator]"/>
     <default_config
         jcr:primaryType="cq:Page">
         <jcr:content
             jcr:primaryType="cq:PageContent"
-            jcr:title="WKND Azure Default Configuration"
+            jcr:title="My Custom Translator Default Configuration"
             sling:resourceType="cq/translation/components/mt-cloudconfig"
             cq:template="/libs/cq/translation/templates/mt-servicepage"
-            cq:cloudservicename="wknd-azure-translation"
-            translationFactory="wknd-azure"/>
+            cq:cloudservicename="my-custom-translator"
+            translationFactory="my-custom-translator"/>
     </default_config>
 </jcr:root>

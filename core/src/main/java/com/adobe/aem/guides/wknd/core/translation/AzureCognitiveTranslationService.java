@@ -43,7 +43,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 /**
- * Lufthansa Azure Cognitive Translation Service.
+ * Custom Azure Cognitive Translation Service.
  *
  * Performs actual translation by calling Azure Cognitive Translator API v3.0.
  *
@@ -100,7 +100,7 @@ public class AzureCognitiveTranslationService implements TranslationService {
             throws TranslationException {
         // Language detection not implemented - throw explicit exception
         throw new TranslationException(
-                "Language detection is not supported by Lufthansa Azure Translation connector",
+                "Language detection is not supported by My Custom Translator connector",
                 TranslationException.ErrorCode.GENERAL_EXCEPTION);
     }
 
@@ -250,7 +250,7 @@ public class AzureCognitiveTranslationService implements TranslationService {
 
             @Override
             public String getServiceCloudConfigRootPath() {
-                return "/conf";
+                return AzureCognitiveTranslationServiceFactory.CLOUD_CONFIG_ROOT_PATH;
             }
         };
     }
@@ -338,7 +338,7 @@ public class AzureCognitiveTranslationService implements TranslationService {
             throws TranslationException {
         // Throw explicit exception instead of returning null
         throw new TranslationException(
-                "Comments are not supported by Lufthansa Azure Translation connector",
+                "Comments are not supported by My Custom Translator connector",
                 TranslationException.ErrorCode.GENERAL_EXCEPTION);
     }
 
@@ -395,7 +395,7 @@ public class AzureCognitiveTranslationService implements TranslationService {
                                                                             TranslationObject translationObject) throws TranslationException {
         // Throw explicit exception instead of returning null
         throw new TranslationException(
-                "Comments are not supported by Lufthansa Azure Translation connector",
+                "Comments are not supported by My Custom Translator connector",
                 TranslationException.ErrorCode.GENERAL_EXCEPTION);
     }
 
